@@ -51,8 +51,8 @@ URL: http://127.0.0.1:8000/create-student/3
 Body → raw → JSON:
 ```
 {
-  "name": "Deema",
-  "age": 21,
+  "name": "Teema",
+  "age": 19,
   "year": "year 2"
 }
 ```
@@ -60,7 +60,7 @@ Body → raw → JSON:
 ```
 {
   "name": "Teema",
-  "age": 21,
+  "age": 19,
   "year": "year 2"
 }
 ```
