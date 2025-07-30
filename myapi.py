@@ -4,11 +4,6 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-students = {
-    1: {"name": "Arein", "age": 22, "year": "year 4"},
-    2: {"name": "Roaa", "age": 20, "year": "year 3"}
-}
-
 class Student(BaseModel):
     name: str
     age: int
@@ -19,45 +14,57 @@ class UpdateStudent(BaseModel):
     age: Optional[int] = None
     year: Optional[str] = None
 
+students = [
+    Student(name="areen", age=22, year="year 4"),
+    Student(name="hsuam", age=29, year="year 0"),
+]
+
 @app.get("/")
 def index():
-    return {"name": "First Data"}
+    return {"message": "First Data"}
 
-@app.get("/get-students/{student_id}")
-def get_student(student_id: int = Path(..., description="The ID of the student to show", gt=0, lt=10)):
-    return students.get(student_id, {"Error": "Student not found"})
+@app.get("/get-students/{index}")
+def get_student(index: int = Path(..., description="Index of student", ge=0)):
+    if index >= len(students):
+        return {"Error": "Student not found"}
+    return students[index]
 
 @app.get("/get-by-name/")
-def get_student(name: Optional[str] = None, test: int = 0):
-    for sid, data in students.items():
-        if data["name"] == name:
-            return data
+def get_student_by_name(name: Optional[str] = None):
+    for student in students:
+        if student.name.lower() == name.lower():
+            return student
     return {"Data": "Not found"}
 
-@app.post("/create-student/{student_id}")
-def create_student(student_id: int, student: Student):
-    if student_id in students:
-        return {"Error": "Student exists"}
-    students[student_id] = student.dict()  
-    return students[student_id]
+@app.post("/create-student/")
+def create_student(student: Student):
+    students.append(student)
+    return {"Message": "Student added", "student": student}
 
-@app.put("/update-student/{student_id}")
-def update_student(student_id: int, student: UpdateStudent):
-    if student_id not in students:
+@app.put("/update-student/{index}")
+def update_student(index: int, student: UpdateStudent):
+    if index >= len(students):
         return {"Error": "Student does not exist"}
 
-    if student.name is not None:
-        students[student_id]["name"] = student.name
-    if student.age is not None:
-        students[student_id]["age"] = student.age
-    if student.year is not None:
-        students[student_id]["year"] = student.year
+    existing = students[index]
 
-    return students[student_id]
+    updated = Student(
+        name=student.name if student.name is not None else existing.name,
+        age=student.age if student.age is not None else existing.age,
+        year=student.year if student.year is not None else existing.year
+    )
 
-@app.delete("/delete-student/{student_id}")
-def delete_student(student_id: int):
-    if student_id not in students:
+    students[index] = updated
+    return {"Message": "Student updated", "student": updated}
+
+
+@app.delete("/delete-student/{index}")
+def delete_student(index: int = Path(..., description="Index of student", ge=0)):
+    if index >= len(students):
         return {"Error": "Student does not exist"}
-    del students[student_id]
-    return {"Message": "Student deleted successfully"}
+    
+    removed_student = students.pop(index)
+    return {
+        "Message": "Student deleted successfully",
+        "Deleted Student": removed_student
+    }
